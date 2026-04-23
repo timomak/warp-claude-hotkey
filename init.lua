@@ -3,6 +3,13 @@
 -- Routed through AppleScript/System Events because hs.eventtap.keyStroke
 -- is affected by the user's still-held Shift from the hotkey — System
 -- Events keystroke is not. Scoped to Warp by the app watcher below.
+--
+-- Usage (as a Lua module):
+--   _G.warpClaude = require("warp-claude-hotkey")
+-- The _G. prefix keeps the returned table alive so its hs.application.watcher
+-- is not garbage-collected after require returns.
+
+local M = {}
 
 local function runWarpClaude()
     local warp = hs.application.get("Warp")
@@ -29,7 +36,7 @@ local function runWarpClaude()
     end
 end
 
-local warpClaudeHotkey = hs.hotkey.new({ "cmd", "shift" }, "d", function()
+M.hotkey = hs.hotkey.new({ "cmd", "shift" }, "d", function()
     -- Don't synthesize keystrokes until the user has released the physical
     -- Cmd and Shift keys; otherwise their modifier state leaks into the
     -- synthesized events and causes "random" behavior (uppercase typing,
@@ -44,19 +51,21 @@ local warpClaudeHotkey = hs.hotkey.new({ "cmd", "shift" }, "d", function()
     )
 end)
 
-local warpAppWatcher = hs.application.watcher.new(function(name, event, _)
+M.watcher = hs.application.watcher.new(function(name, event, _)
     if name == "Warp" then
         if event == hs.application.watcher.activated then
-            warpClaudeHotkey:enable()
+            M.hotkey:enable()
         elseif event == hs.application.watcher.deactivated then
-            warpClaudeHotkey:disable()
+            M.hotkey:disable()
         end
     end
 end)
-warpAppWatcher:start()
+M.watcher:start()
 
 -- Enable immediately if Warp is already the frontmost app on load.
 local front = hs.application.frontmostApplication()
 if front and front:name() == "Warp" then
-    warpClaudeHotkey:enable()
+    M.hotkey:enable()
 end
+
+return M

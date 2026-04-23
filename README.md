@@ -51,22 +51,21 @@ Enable launch at login:
 
 ### 2. Install the config
 
-Pick the option that matches your existing setup:
+This file is a Lua module — load it via `require` from your main `~/.hammerspoon/init.lua`.
 
-**Option A — Fresh install** (you don't already have `~/.hammerspoon/init.lua`):
-
-```bash
-mkdir -p ~/.hammerspoon
-cp init.lua ~/.hammerspoon/init.lua
-```
-
-**Option B — Append to an existing config**:
+Clone the repo into `~/.hammerspoon/warp-claude-hotkey`:
 
 ```bash
-cat init.lua >> ~/.hammerspoon/init.lua
+git clone https://github.com/timomak/warp-claude-hotkey.git ~/.hammerspoon/warp-claude-hotkey
 ```
 
-Before running Option B, open your existing `~/.hammerspoon/init.lua` and check for name collisions. This script defines the locals `runWarpClaude`, `warpClaudeHotkey`, and `warpAppWatcher`. If any of those are already defined in your config, rename them in one place before appending. Also note that `cat >>` is a one-shot install — re-running it appends a second copy, which creates two hotkey handlers fighting over the same shortcut. If you want to update later, edit the block in place or remove the old one first.
+Then add this line to `~/.hammerspoon/init.lua` (create the file if it doesn't exist):
+
+```lua
+_G.warpClaude = require("warp-claude-hotkey")
+```
+
+The `_G.` prefix is **required**. It stores the returned module table as a global so its `hs.application.watcher` isn't garbage-collected after `require` returns — without it, the app-scoping silently stops working after a few minutes.
 
 Then reload: **Hammerspoon menu bar icon → Reload Config**
 
