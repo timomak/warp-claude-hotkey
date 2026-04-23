@@ -51,18 +51,22 @@ Enable launch at login:
 
 ### 2. Install the config
 
-Append the contents of [`init.lua`](./init.lua) to your existing `~/.hammerspoon/init.lua`:
+Pick the option that matches your existing setup:
 
-```bash
-cat init.lua >> ~/.hammerspoon/init.lua
-```
-
-Or, if you don't have an existing config:
+**Option A — Fresh install** (you don't already have `~/.hammerspoon/init.lua`):
 
 ```bash
 mkdir -p ~/.hammerspoon
 cp init.lua ~/.hammerspoon/init.lua
 ```
+
+**Option B — Append to an existing config**:
+
+```bash
+cat init.lua >> ~/.hammerspoon/init.lua
+```
+
+Before running Option B, open your existing `~/.hammerspoon/init.lua` and check for name collisions. This script defines the locals `runWarpClaude`, `warpClaudeHotkey`, and `warpAppWatcher`. If any of those are already defined in your config, rename them in one place before appending. Also note that `cat >>` is a one-shot install — re-running it appends a second copy, which creates two hotkey handlers fighting over the same shortcut. If you want to update later, edit the block in place or remove the old one first.
 
 Then reload: **Hammerspoon menu bar icon → Reload Config**
 
@@ -106,6 +110,12 @@ System Settings → Privacy & Security → Automation → Hammerspoon → ensure
 3. Once released, AppleScript's `System Events` sends `Cmd+D` to Warp (native split-right, inherits cwd), waits 0.5s for the new pane to take focus, types `claude`, and presses Return.
 
 AppleScript is used instead of `hs.eventtap.keyStroke` because the latter's synthesized events are affected by physical modifier state on some macOS versions, whereas `System Events` `keystroke` is not.
+
+## Related
+
+- [mx-mouse-fix](https://github.com/timomak/mx-mouse-fix) — sibling Hammerspoon config that remaps Logitech MX Master side buttons to switch macOS desktops and open Mission Control.
+
+The two configs are independent and can live side-by-side in the same `~/.hammerspoon/init.lua` — no conflicts.
 
 ## License
 
