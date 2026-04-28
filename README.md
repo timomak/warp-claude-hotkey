@@ -1,11 +1,9 @@
 # Warp Claude Hotkey
 
-One-keystroke launcher for [Claude Code](https://claude.com/claude-code) inside [Warp](https://www.warp.dev/), powered by [Hammerspoon](https://www.hammerspoon.org/).
+Keystroke launchers for [Claude Code](https://claude.com/claude-code) inside [Warp](https://www.warp.dev/), powered by [Hammerspoon](https://www.hammerspoon.org/).
 
-Press **Cmd+Shift+D** in Warp and it:
-
-1. Splits the current pane to the right (using Warp's native `Cmd+D`, which inherits the focused pane's `cwd`).
-2. Types `claude` and hits Enter in the new pane.
+- **Cmd+Shift+D** — splits the current pane to the right (using Warp's native `Cmd+D`, which inherits the focused pane's `cwd`) and runs `claude` in it.
+- **Cmd+Shift+A** — same as above, then waits for Claude to come up and submits `/address-code-review-comments ultrathink`.
 
 No new windows. No cwd reset. No clicking.
 
@@ -14,6 +12,7 @@ No new windows. No cwd reset. No clicking.
 | Shortcut | Action |
 |----------|--------|
 | Cmd+Shift+D (in Warp) | Split pane right + run `claude` in the new pane |
+| Cmd+Shift+A (in Warp) | Same as above, then submit `/address-code-review-comments ultrathink` |
 
 ## Why Hammerspoon?
 
@@ -90,11 +89,14 @@ Drop that in your `~/.zshrc` / `~/.bashrc`. When Cmd+Shift+D fires, the new Warp
 
 ## Troubleshooting
 
-**Cmd+Shift+D does nothing.**
+**Cmd+Shift+D / Cmd+Shift+A does nothing.**
 Open the Hammerspoon Console (menu bar → Console) and press the shortcut. You should see `[warpClaudeHotkey] ok` or an error line. If there's nothing, the hotkey didn't bind — check for a syntax error on reload, or confirm Warp is the frontmost app (the hotkey is app-scoped).
 
 **Pane splits but `claude` doesn't type, or types into the old pane.**
 The `delay 0.5` between split and typing isn't enough for your machine. Bump it up to `0.7` or `1.0` in `runWarpClaude()`.
+
+**Cmd+Shift+A: the follow-up command is dropped or arrives mid-boot.**
+`CLAUDE_BOOT_DELAY` (top of `init.lua`, default `3.0`) is how long it waits after submitting `claude` before typing the follow-up. Bump it up if Claude takes longer than that to accept input on your machine.
 
 **Random uppercase letters or Cmd+key shortcuts firing instead of typing.**
 Your physical Shift/Cmd is leaking into the synthesized keystrokes. The `hs.timer.waitUntil` guard should prevent this — confirm you're on the version of the script that includes it.
@@ -104,9 +106,9 @@ System Settings → Privacy & Security → Automation → Hammerspoon → ensure
 
 ## How it works
 
-1. `hs.hotkey` binds Cmd+Shift+D globally, but an `hs.application.watcher` only enables the binding while Warp is frontmost.
+1. `hs.hotkey` binds Cmd+Shift+D and Cmd+Shift+A globally, but an `hs.application.watcher` only enables the bindings while Warp is frontmost.
 2. When fired, the callback waits until your physical Cmd and Shift are released (`hs.eventtap.checkKeyboardModifiers`). This prevents your held modifiers from contaminating the synthesized keystrokes.
-3. Once released, AppleScript's `System Events` sends `Cmd+D` to Warp (native split-right, inherits cwd), waits 0.5s for the new pane to take focus, types `claude`, and presses Return.
+3. Once released, AppleScript's `System Events` sends `Cmd+D` to Warp (native split-right, inherits cwd), waits 0.5s for the new pane to take focus, types `claude`, and presses Return. For Cmd+Shift+A, it then waits `CLAUDE_BOOT_DELAY` seconds for Claude's TUI to be ready, types the follow-up slash command, and presses Return again.
 
 AppleScript is used instead of `hs.eventtap.keyStroke` because the latter's synthesized events are affected by physical modifier state on some macOS versions, whereas `System Events` `keystroke` is not.
 
